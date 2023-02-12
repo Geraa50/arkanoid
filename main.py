@@ -15,14 +15,9 @@ charick_rect = int(charik_raduis * 2 ** 0.5)
 ball = pygame.Rect(WIDTH // 2, HEIHTN - platform_height - 100, charick_rect, charick_rect)
 napravl_x, napravl_y = 1, -1
 kirpichi = [pygame.Rect(1 + 55 * i, 1 + 30 * j, 50, 25) for i in range(100) for j in range(10)]
+#  kirpichi = [pygame.Rect(1 + 55 * i, 1 + 30 * j, 1200, 25) for i in range(1) for j in range(1)]
+#  включить строку сверху и выключить строку над ней, что бы получить один большой кирпич, для проверки окончания игры
 start_game = False
-
-
-pygame.init()
-sc = pygame.display.set_mode((WIDTH, HEIHTN))
-clock = pygame.time.Clock()
-img = pygame.image.load('1.jpg').convert()
-# фон добавить надо любой
 
 
 def detect_collision(dx, dy, ball, rect):
@@ -44,48 +39,55 @@ def detect_collision(dx, dy, ball, rect):
     return dx, dy
 
 
-while True:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            exit()
-    sc.blit(img, (0, 0))
-    [pygame.draw.rect(sc, 'green', kirpich) for c, kirpich in enumerate(kirpichi)]
-    pygame.draw.rect(sc, pygame.Color('darkblue'), platforma)
-    pygame.draw.circle(sc, pygame.Color('white'), ball.center, charik_raduis)
+if __name__ == '__main__':
+    pygame.init()
+    sc = pygame.display.set_mode((WIDTH, HEIHTN))
+    clock = pygame.time.Clock()
+    img = pygame.image.load('1.jpg').convert()
+    runniing = True
+    # фон добавить надо любой
 
-    mouse_x, mouse_y = pygame.mouse.get_pos()
-    platforma.left = mouse_x - 165
+    while runniing:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                runniing = False
+        sc.blit(img, (0, 0))
+        [pygame.draw.rect(sc, 'green', kirpich) for c, kirpich in enumerate(kirpichi)]
+        pygame.draw.rect(sc, pygame.Color('darkblue'), platforma)
+        pygame.draw.circle(sc, pygame.Color('white'), ball.center, charik_raduis)
 
-    if event.type == pygame.MOUSEBUTTONDOWN or start_game:
-        start_game = True
-        pygame.mouse.set_visible(False)
-    else:
-        pygame.display.flip()
-        pygame.mouse.set_pos(WIDTH // 2, HEIHTN // 2)
-        pygame.mouse.set_visible(True)
-        continue
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+        platforma.left = mouse_x - 165
 
-    ball.x += charick_speed * napravl_x
-    ball.y += charick_speed * napravl_y
+        if event.type == pygame.MOUSEBUTTONDOWN or start_game:
+            start_game = True
+            pygame.mouse.set_visible(False)
+        else:
+            pygame.display.flip()
+            pygame.mouse.set_pos(WIDTH // 2, HEIHTN // 2)
+            pygame.mouse.set_visible(True)
+            continue
 
-    if ball.centerx < charik_raduis or ball.centerx > WIDTH - charik_raduis:
-        napravl_x *= -1
-    if ball.centery < charik_raduis:
-        napravl_y *= -1
-    if ball.colliderect(platforma) and napravl_y > 0:
-        napravl_x, napravl_y = detect_collision(napravl_x, napravl_y, ball, platforma)
+        ball.x += charick_speed * napravl_x
+        ball.y += charick_speed * napravl_y
+
+        if ball.centerx < charik_raduis or ball.centerx > WIDTH - charik_raduis:
+            napravl_x *= -1
+        if ball.centery < charik_raduis:
+            napravl_y *= -1
+        if ball.colliderect(platforma) and napravl_y > 0:
+            napravl_x, napravl_y = detect_collision(napravl_x, napravl_y, ball, platforma)
     # Надо добавить разные коэффициенты на касания с разными частями платформы чем ближе к центру тем прямее отскок
     # А то получается оно как отсутствие двд диска прыгает запрограммировано
-    number_kirpich_delete = ball.collidelist(kirpichi)
-    if number_kirpich_delete != -1:
-        delete_kirpich = kirpichi.pop(number_kirpich_delete)
-        napravl_x, napravl_y = detect_collision(napravl_x, napravl_y, ball, delete_kirpich)
+        number_kirpich_delete = ball.collidelist(kirpichi)
+        if number_kirpich_delete != -1:
+            delete_kirpich = kirpichi.pop(number_kirpich_delete)
+            napravl_x, napravl_y = detect_collision(napravl_x, napravl_y, ball, delete_kirpich)
         # Без строки выше играть интереснее ;)
 
-    if ball.bottom > HEIHTN:
-        exit()
+        if ball.bottom > HEIHTN:
+            exit()
     # Добавить победу и более красочное поражение (экран поражения)
 
-
-    pygame.display.flip()
-    clock.tick(fps)
+        pygame.display.flip()
+        clock.tick(fps)
