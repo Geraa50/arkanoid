@@ -14,10 +14,36 @@ charick_speed = 6
 charick_rect = int(charik_raduis * 2 ** 0.5)
 ball = pygame.Rect(WIDTH // 2, HEIHTN - platform_height - 100, charick_rect, charick_rect)
 napravl_x, napravl_y = 1, -1
-kirpichi = [pygame.Rect(1 + 55 * i, 1 + 30 * j, 50, 25) for i in range(100) for j in range(10)]
+#kirpichi = [pygame.Rect(1 + 55 * i, 1 + 30 * j, 50, 25) for i in range(100) for j in range(10)]
 #  kirpichi = [pygame.Rect(1 + 55 * i, 1 + 30 * j, 1200, 25) for i in range(1) for j in range(1)]
 #  включить строку сверху и выключить строку над ней, что бы получить один большой кирпич, для проверки окончания игры
 start_game = False
+# До начала программы прописать kirpichi(все значения)б потом прописывать их рендер вместо draw и
+# delete через класс,а не сразу
+
+
+class Kirpichi:
+    def __init__(self, left, top, size_w, size_h, kol_vo_w, kol_vo_h):
+        self.kirpichi = [pygame.Rect(1 + left * i, 1 + top * j, size_w, size_h)
+                         for i in range(kol_vo_w) for j in range(kol_vo_h)]
+
+    def delete_kirpich(self, number_kirpich_which_delete):
+        return self.kirpichi.pop(number_kirpich_which_delete)
+    
+    def render_kirpichi(self, sc):
+        [pygame.draw.rect(sc, 'green', kirpich) for c, kirpich in enumerate(self.kirpichi)]
+
+    def kirpichi_list(self):
+        return self.kirpichi
+
+
+class Platforma:
+    def __init__(self):
+        pass
+
+    def move_platform(self):
+        pass
+
 
 
 def detect_collision(dx, dy, ball, rect):
@@ -41,18 +67,19 @@ def detect_collision(dx, dy, ball, rect):
 
 if __name__ == '__main__':
     pygame.init()
+    pygame.display.set_caption('arkanoid')
     sc = pygame.display.set_mode((WIDTH, HEIHTN))
     clock = pygame.time.Clock()
     img = pygame.image.load('1.jpg').convert()
     runniing = True
     # фон добавить надо любой
-
+    kirpichi = Kirpichi(55, 30, 50, 25, 100, 10)
     while runniing:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 runniing = False
         sc.blit(img, (0, 0))
-        [pygame.draw.rect(sc, 'green', kirpich) for c, kirpich in enumerate(kirpichi)]
+        kirpichi.render_kirpichi(sc)
         pygame.draw.rect(sc, pygame.Color('darkblue'), platforma)
         pygame.draw.circle(sc, pygame.Color('white'), ball.center, charik_raduis)
 
@@ -79,10 +106,10 @@ if __name__ == '__main__':
             napravl_x, napravl_y = detect_collision(napravl_x, napravl_y, ball, platforma)
     # Надо добавить разные коэффициенты на касания с разными частями платформы чем ближе к центру тем прямее отскок
     # А то получается оно как отсутствие двд диска прыгает запрограммировано
-        number_kirpich_delete = ball.collidelist(kirpichi)
+        number_kirpich_delete = ball.collidelist(kirpichi.kirpichi_list())
         if number_kirpich_delete != -1:
-            delete_kirpich = kirpichi.pop(number_kirpich_delete)
-            napravl_x, napravl_y = detect_collision(napravl_x, napravl_y, ball, delete_kirpich)
+            deleted_kirpich = kirpichi.delete_kirpich(number_kirpich_delete)
+            napravl_x, napravl_y = detect_collision(napravl_x, napravl_y, ball, deleted_kirpich)
         # Без строки выше играть интереснее ;)
 
         if ball.bottom > HEIHTN:
