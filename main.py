@@ -1,24 +1,6 @@
 import pygame
-from random import randrange as rnd
-
-
 WIDTH, HEIHTN = 1200, 800
 fps = 60
-# platform_width = 330
-#platform_height = 35
-# platform_speed = 15
-# platforma = pygame.Rect(WIDTH // 2 - platform_width // 2, HEIHTN - platform_height - 10,
-#                         platform_width, platform_height)
-charik_raduis = 20
-charick_speed = 6
-charick_rect = int(charik_raduis * 2 ** 0.5)
-ball = pygame.Rect(WIDTH // 2, HEIHTN - 35 - 100, charick_rect, charick_rect)
-napravl_x, napravl_y = 1, -1
-# kirpichi = [pygame.Rect(1 + 55 * i, 1 + 30 * j, 50, 25) for i in range(100) for j in range(10)]
-#  kirpichi = [pygame.Rect(1 + 55 * i, 1 + 30 * j, 1200, 25) for i in range(1) for j in range(1)]
-#  включить строку сверху и выключить строку над ней, что бы получить один большой кирпич, для проверки окончания игры
-# До начала программы прописать kirpichi(все значения)б потом прописывать их рендер вместо draw и
-# delete через класс, а не сразу
 
 
 class Kirpichi:
@@ -66,7 +48,7 @@ class Ball:
     def __init__(self, r, s):
         self.charik_raduis = r
         self.charick_speed = s
-        self.charick_rect = int(charik_raduis * 2 ** 0.5)
+        self.charick_rect = int(self.charik_raduis * 2 ** 0.5)
         self.napravl_x, self.napravl_y = 1, -1
         self.ball = pygame.Rect(WIDTH // 2, HEIHTN - 35 - 100, self.charick_rect, self.charick_rect)
 
