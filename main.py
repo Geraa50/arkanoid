@@ -49,7 +49,7 @@ class Platforma:
         self.x, self.y = coord_mouse
         self.platforma.left = self.x - 165
 
-    def collide_with_platforma(self):
+    def collide_with_platforma(self, ball):
         return ball.colliderect(self.platforma)
 
     def render_platform(self, sc):
@@ -77,13 +77,11 @@ class Ball:
         self.ball.x += self.charick_speed * self.napravl_x
         self.ball.y += self.charick_speed * self.napravl_y
 
-    def change_napravl(self, colide_pltfrm, ret_pltfrm):
+    def change_napravl(self):
         if self.ball.centerx < self.charik_raduis or self.ball.centerx > WIDTH - self.charik_raduis:
             self.napravl_x *= -1
         if self.ball.centery < self.charik_raduis:
             self.napravl_y *= -1
-        if colide_pltfrm and self.napravl_y > 0:
-            self.napravl_x, self.napravl_y = detect_collision(self.napravl_x, self.napravl_y, self.ball, ret_pltfrm)
 
     def colision_ball(self):
         pass
@@ -97,11 +95,16 @@ class Ball:
     def return_ball(self):
         return self.ball
 
-    def return_centre(self):
-        pass
+    def return_napravl_y(self):
+        return self.napravl_y
 
     def change_napravl_with_kirpich(self, deleted):
         self.napravl_x, self.napravl_y = detect_collision(self.napravl_x, self.napravl_y, self.ball, deleted)
+
+    def change_napravl_with_platform(self, platformaa):
+        self.napravl_x, self.napravl_y = detect_collision(self.napravl_x, self.napravl_y, self.ball, platformaa)
+        # Надо добавить разные коэффициенты на касания с разными частями платформы чем ближе к центру тем прямее отскок
+        # А то получается оно как отсутствие двд диска прыгает запрограммировано
 
 
 def detect_collision(dx, dy, ball, rect):
@@ -142,12 +145,9 @@ if __name__ == '__main__':
         sc.blit(img, (0, 0))
         kirpichi.render_kirpichi(sc)
         pltfrm.render_platform(sc)
-        # pygame.draw.rect(sc, pygame.Color('darkblue'), platforma)
         class_ball.render_ball(sc)
-        #pygame.draw.circle(sc, pygame.Color('white'), ball.center, charik_raduis)
+
         pltfrm.move_platform(pygame.mouse.get_pos())
-        # mouse_x, mouse_y = pygame.mouse.get_pos()
-        # platforma.left = mouse_x - 165
 
         if event.type == pygame.MOUSEBUTTONDOWN or start_game:
             start_game = True
@@ -159,25 +159,16 @@ if __name__ == '__main__':
             continue
 
         class_ball.movement_ball()
-        #ball.x += charick_speed * napravl_x
-        #ball.y += charick_speed * napravl_y
-        class_ball.change_napravl(pltfrm.collide_with_platforma(), pltfrm.return_platfroma())
-        if ball.centerx < charik_raduis or ball.centerx > WIDTH - charik_raduis:
-            napravl_x *= -1
-        if ball.centery < charik_raduis:
-            napravl_y *= -1
-        if pltfrm.collide_with_platforma() and napravl_y > 0:
-            napravl_x, napravl_y = detect_collision(napravl_x, napravl_y, ball, pltfrm.return_platfroma())
-    # Надо добавить разные коэффициенты на касания с разными частями платформы чем ближе к центру тем прямее отскок
-    # А то получается оно как отсутствие двд диска прыгает запрограммировано
+        class_ball.change_napravl()
+        if pltfrm.collide_with_platforma(class_ball.return_ball()) and class_ball.return_napravl_y() > 0:
+            class_ball.change_napravl_with_platform(pltfrm.return_platfroma())
+
         number_kirpich_delete = class_ball.return_ball().collidelist(kirpichi.kirpichi_list())
         if number_kirpich_delete != -1:
             deleted_kirpich = kirpichi.delete_kirpich(number_kirpich_delete)
             class_ball.change_napravl_with_kirpich(deleted_kirpich)
-            #napravl_x, napravl_y = detect_collision(napravl_x, napravl_y, ball, deleted_kirpich)
-        # Без строки выше играть интереснее ;)
 
-        if ball.bottom > HEIHTN:
+        if class_ball.return_ball().bottom > HEIHTN:
             exit()
     # Добавить победу и более красочное поражение (экран поражения)
 
