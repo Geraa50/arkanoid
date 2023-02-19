@@ -5,14 +5,14 @@ from random import randrange as rnd
 WIDTH, HEIHTN = 1200, 800
 fps = 60
 # platform_width = 330
-platform_height = 35
+#platform_height = 35
 # platform_speed = 15
 # platforma = pygame.Rect(WIDTH // 2 - platform_width // 2, HEIHTN - platform_height - 10,
 #                         platform_width, platform_height)
 charik_raduis = 20
 charick_speed = 6
 charick_rect = int(charik_raduis * 2 ** 0.5)
-ball = pygame.Rect(WIDTH // 2, HEIHTN - platform_height - 100, charick_rect, charick_rect)
+ball = pygame.Rect(WIDTH // 2, HEIHTN - 35 - 100, charick_rect, charick_rect)
 napravl_x, napravl_y = 1, -1
 # kirpichi = [pygame.Rect(1 + 55 * i, 1 + 30 * j, 50, 25) for i in range(100) for j in range(10)]
 #  kirpichi = [pygame.Rect(1 + 55 * i, 1 + 30 * j, 1200, 25) for i in range(1) for j in range(1)]
@@ -58,17 +58,32 @@ class Platforma:
     def return_platfroma(self):
         return self.platforma
 
+    def return_height(self):
+        return self.platform_height
+
 
 class Ball:
-    def __init__(self):
-        self.ball = pygame.Rect(WIDTH // 2, HEIHTN - platform_height - 100, charick_rect, charick_rect)
+    def __init__(self, r, s):
+        self.charik_raduis = r
+        self.charick_speed = s
+        self.charick_rect = int(charik_raduis * 2 ** 0.5)
+        self.napravl_x, self.napravl_y = 1, -1
+        self.ball = pygame.Rect(WIDTH // 2, HEIHTN - 35 - 100, self.charick_rect, self.charick_rect)
 
-    def movement_ball(self, speed, x, y):
-        ball.x += speed * x
-        ball.y += speed * y
+    def render_ball(self, sc):
+        pygame.draw.circle(sc, pygame.Color('white'), self.ball.center, self.charik_raduis)
 
-    def change_napravl(self):
-        pass
+    def movement_ball(self):
+        self.ball.x += self.charick_speed * self.napravl_x
+        self.ball.y += self.charick_speed * self.napravl_y
+
+    def change_napravl(self, colide_pltfrm, ret_pltfrm):
+        if self.ball.centerx < self.charik_raduis or self.ball.centerx > WIDTH - self.charik_raduis:
+            self.napravl_x *= -1
+        if self.ball.centery < self.charik_raduis:
+            self.napravl_y *= -1
+        if colide_pltfrm and self.napravl_y > 0:
+            self.napravl_x, self.napravl_y = detect_collision(self.napravl_x, self.napravl_y, self.ball, ret_pltfrm)
 
     def colision_ball(self):
         pass
@@ -81,6 +96,12 @@ class Ball:
 
     def return_ball(self):
         return self.ball
+
+    def return_centre(self):
+        pass
+
+    def change_napravl_with_kirpich(self, deleted):
+        self.napravl_x, self.napravl_y = detect_collision(self.napravl_x, self.napravl_y, self.ball, deleted)
 
 
 def detect_collision(dx, dy, ball, rect):
@@ -113,6 +134,7 @@ if __name__ == '__main__':
     # фон добавить надо любой
     kirpichi = Kirpichi(55, 30, 50, 25, 100, 10)
     pltfrm = Platforma(330, 35, 15)
+    class_ball = Ball(20, 6)
     while runniing:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -121,7 +143,8 @@ if __name__ == '__main__':
         kirpichi.render_kirpichi(sc)
         pltfrm.render_platform(sc)
         # pygame.draw.rect(sc, pygame.Color('darkblue'), platforma)
-        pygame.draw.circle(sc, pygame.Color('white'), ball.center, charik_raduis)
+        class_ball.render_ball(sc)
+        #pygame.draw.circle(sc, pygame.Color('white'), ball.center, charik_raduis)
         pltfrm.move_platform(pygame.mouse.get_pos())
         # mouse_x, mouse_y = pygame.mouse.get_pos()
         # platforma.left = mouse_x - 165
@@ -134,10 +157,11 @@ if __name__ == '__main__':
             pygame.mouse.set_pos(WIDTH // 2, HEIHTN // 2)
             pygame.mouse.set_visible(True)
             continue
-        class_ball = Ball()
-        class_ball.movement_ball(charick_speed, napravl_x, napravl_y)
-        # ball.x += charick_speed * napravl_x
-        # ball.y += charick_speed * napravl_y
+
+        class_ball.movement_ball()
+        #ball.x += charick_speed * napravl_x
+        #ball.y += charick_speed * napravl_y
+        class_ball.change_napravl(pltfrm.collide_with_platforma(), pltfrm.return_platfroma())
         if ball.centerx < charik_raduis or ball.centerx > WIDTH - charik_raduis:
             napravl_x *= -1
         if ball.centery < charik_raduis:
@@ -146,10 +170,11 @@ if __name__ == '__main__':
             napravl_x, napravl_y = detect_collision(napravl_x, napravl_y, ball, pltfrm.return_platfroma())
     # Надо добавить разные коэффициенты на касания с разными частями платформы чем ближе к центру тем прямее отскок
     # А то получается оно как отсутствие двд диска прыгает запрограммировано
-        number_kirpich_delete = ball.collidelist(kirpichi.kirpichi_list())
+        number_kirpich_delete = class_ball.return_ball().collidelist(kirpichi.kirpichi_list())
         if number_kirpich_delete != -1:
             deleted_kirpich = kirpichi.delete_kirpich(number_kirpich_delete)
-            napravl_x, napravl_y = detect_collision(napravl_x, napravl_y, ball, deleted_kirpich)
+            class_ball.change_napravl_with_kirpich(deleted_kirpich)
+            #napravl_x, napravl_y = detect_collision(napravl_x, napravl_y, ball, deleted_kirpich)
         # Без строки выше играть интереснее ;)
 
         if ball.bottom > HEIHTN:
