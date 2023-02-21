@@ -1,9 +1,9 @@
 import pygame
-WIDTH, HEIHTN = 1200, 800
+WIDTH, HEIGHT = 1200, 600
 fps = 60
 
 
-class Kirpichi:
+class Bricks:
     def __init__(self, left, top, size_w, size_h, kol_vo_w, kol_vo_h):
         self.kirpichi = [pygame.Rect(1 + left * i, 1 + top * j, size_w, size_h)
                          for i in range(kol_vo_w) for j in range(kol_vo_h)]
@@ -24,7 +24,7 @@ class Platforma:
         self.platform_width = w
         self.platform_height = h
         self.platform_speed = s
-        self.platforma = pygame.Rect(WIDTH // 2 - self.platform_width // 2, HEIHTN - self.platform_height - 10,
+        self.platforma = pygame.Rect(WIDTH // 2 - self.platform_width // 2, HEIGHT - self.platform_height - 10,
                                      self.platform_width, self.platform_height)
 
     def move_platform(self, coord_mouse):
@@ -50,7 +50,7 @@ class Ball:
         self.charick_speed = s
         self.charick_rect = int(self.charik_raduis * 2 ** 0.5)
         self.napravl_x, self.napravl_y = 1, -1
-        self.ball = pygame.Rect(WIDTH // 2, HEIHTN - 35 - 100, self.charick_rect, self.charick_rect)
+        self.ball = pygame.Rect(WIDTH // 2, HEIGHT - 35 - 100, self.charick_rect, self.charick_rect)
 
     def render_ball(self, sc):
         pygame.draw.circle(sc, pygame.Color('white'), self.ball.center, self.charik_raduis)
@@ -111,48 +111,50 @@ def detect_collision(dx, dy, ball, rect):
 if __name__ == '__main__':
     pygame.init()
     pygame.display.set_caption('arkanoid')
-    sc = pygame.display.set_mode((WIDTH, HEIHTN))
+    sc = pygame.display.set_mode((WIDTH, HEIGHT))
     clock = pygame.time.Clock()
     img = pygame.image.load('1.jpg').convert()
     runniing = True
     start_game = False
     # фон добавить надо любой
-    kirpichi = Kirpichi(55, 30, 50, 25, 100, 10)
+    kirpichi = Bricks(55, 30, 50, 25, 100, 10)
     pltfrm = Platforma(330, 35, 15)
     class_ball = Ball(20, 6)
     while runniing:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 runniing = False
-        sc.blit(img, (0, 0))
-        kirpichi.render_kirpichi(sc)
-        pltfrm.render_platform(sc)
-        class_ball.render_ball(sc)
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                start_game = True
+                pygame.mouse.set_visible(False)
 
-        pltfrm.move_platform(pygame.mouse.get_pos())
+        if start_game:
+            sc.blit(img, (0, 0))
+            kirpichi.render_kirpichi(sc)
+            pltfrm.render_platform(sc)
+            class_ball.render_ball(sc)
 
-        if event.type == pygame.MOUSEBUTTONDOWN or start_game:
-            start_game = True
-            pygame.mouse.set_visible(False)
-        else:
+            pltfrm.move_platform(pygame.mouse.get_pos())
+
+        
             pygame.display.flip()
-            pygame.mouse.set_pos(WIDTH // 2, HEIHTN // 2)
+            # pygame.mouse.set_pos(WIDTH // 2, HEIGHT // 2)
             pygame.mouse.set_visible(True)
-            continue
 
-        class_ball.movement_ball()
-        class_ball.change_napravl()
-        if pltfrm.collide_with_platforma(class_ball.return_ball()) and class_ball.return_napravl_y() > 0:
-            class_ball.change_napravl_with_platform(pltfrm.return_platfroma())
 
-        number_kirpich_delete = class_ball.return_ball().collidelist(kirpichi.kirpichi_list())
-        if number_kirpich_delete != -1:
-            deleted_kirpich = kirpichi.delete_kirpich(number_kirpich_delete)
-            class_ball.change_napravl_with_kirpich(deleted_kirpich)
+            class_ball.movement_ball()
+            class_ball.change_napravl()
+            if pltfrm.collide_with_platforma(class_ball.return_ball()) and class_ball.return_napravl_y() > 0:
+                class_ball.change_napravl_with_platform(pltfrm.return_platfroma())
 
-        if class_ball.return_ball().bottom > HEIHTN:
-            exit()
-    # Добавить победу и более красочное поражение (экран поражения)
+            number_kirpich_delete = class_ball.return_ball().collidelist(kirpichi.kirpichi_list())
+            if number_kirpich_delete != -1:
+                deleted_kirpich = kirpichi.delete_kirpich(number_kirpich_delete)
+                class_ball.change_napravl_with_kirpich(deleted_kirpich)
 
-        pygame.display.flip()
-        clock.tick(fps)
+            if class_ball.return_ball().bottom > HEIGHT:
+                exit()
+           # Добавить победу и более красочное поражение (экран поражения)
+
+            pygame.display.flip()
+            clock.tick(fps)
