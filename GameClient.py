@@ -87,6 +87,7 @@ class GameTCPClient(threading.Thread):
                 break
             if not self.getPackage() and self.data:
                 data = self.formJSON(self.data)
+                logger.info(data)
                 # logger.debug(f"Send: {data}")
                 self.send(data.encode())
                 package = self.recv(PACKAGE_SIZE).decode()
@@ -155,7 +156,6 @@ class GameTCPClient(threading.Thread):
         self.data.append(syncObj)
         return syncObj
 
-
     def createSyncInstance(self, id, packageAttribute, dict_):
         objClass = self.syncObjectsClasses[packageAttribute.split("-")[0]]
         newInst = objClass.initSyncObject(objClass, dict_)
@@ -163,7 +163,6 @@ class GameTCPClient(threading.Thread):
             self.syncObjects[id] = {}
         self.syncObjects[id][packageAttribute] = newInst
         return newInst
-
 
     def close(self):
         self.client_socket.close()

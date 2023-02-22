@@ -1,12 +1,16 @@
 import pygame
+from settings import HOST
+from GameClient import ISynchronizedObject, GameTCPClient
+# нужно модуль loguru поставить чтоб логи заработали
+from loguru import logger
+logger.add("file.log", backtrace=True, diagnose=True, enqueue=True) 
 
-from GameClient import ISynchronizedObject
 
 WIDTH, HEIGHT = 1200, 600
 fps = 60
 
 
-class BrickManager:
+class BrickManager():
     def __init__(self, left, top, size_w, size_h, kol_vo_w, kol_vo_h):
         self.bricks = [pygame.Rect(1 + left * i, 1 + top * j, size_w, size_h)
                          for i in range(kol_vo_w) for j in range(kol_vo_h)]
@@ -17,11 +21,11 @@ class BrickManager:
     def render_bricks(self, screen):
         [pygame.draw.rect(screen, 'green', brick) for c, brick in enumerate(self.bricks)]
 
-    def bricks_list(self):
+    def get_bricks_list(self):
         return self.bricks
 
 
-class Platform:
+class Platform(ISynchronizedObject):
     def __init__(self, w, h, s):
         self.x, self.y = 0, 0
         self.platform_width = w
@@ -29,6 +33,19 @@ class Platform:
         self.platform_speed = s
         self.platform = pygame.Rect(WIDTH // 2 - self.platform_width // 2, HEIGHT - self.platform_height - 10,
                                      self.platform_width, self.platform_height)
+
+    @staticmethod
+    def getInitSyncObjectData(packageDict):
+        # logger.debug(packageDict)
+        init_dict = {"w": 330, "h": 35, "s": 15}
+        # logger.debug(init_dict)
+        return init_dict
+
+    def returnPackingData(self):
+        return {"coords": (self.x, self.y)}
+
+    def setPackingData(self, data):
+        self.platform.left = data["coords"][0] - 165
 
     def move_platform(self, coord_mouse):
         self.x, self.y = coord_mouse
@@ -40,14 +57,14 @@ class Platform:
     def render_platform(self, screen):
         pygame.draw.rect(screen, pygame.Color('darkblue'), self.platform)
 
-    def return_platfroma(self):
+    def return_platform(self):
         return self.platform
 
     def return_height(self):
         return self.platform_height
 
 
-class Ball:
+class Ball():
     def __init__(self, r, s):
         self.ball_raduis = r
         self.ball_speed = s
@@ -103,6 +120,11 @@ def detect_collision(dx, dy, ball, rect):
 
 
 if __name__ == '__main__':
+    client = GameTCPClient(HOST, globals(), globalsEnabled=True)
+    client.start()
+    client.isInitDone.wait()
+
+
     pygame.init()
     pygame.display.set_caption('arkanoid')
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -112,7 +134,7 @@ if __name__ == '__main__':
     start_game = False
     # фон добавить надо любой
     bricks = BrickManager(55, 30, 50, 25, 100, 10)
-    platform = Platform(330, 35, 15)
+    platform = client.synchronize(Platform, None, w=330, h=35, s=15)
     ball = Ball(20, 6)
     while running:
         for event in pygame.event.get():
@@ -124,6 +146,11 @@ if __name__ == '__main__':
 
         if start_game:
             clock.tick(fps)
+            package = client.getPackage()
+            if package:
+                client.processPackage(package)
+
+
             screen.blit(img, (0, 0))
             bricks.render_bricks(screen)
             platform.render_platform(screen)
@@ -140,16 +167,19 @@ if __name__ == '__main__':
             ball.movement_ball()
             ball.change_direction()
             if platform.collide_with_platform(ball.return_ball()) and ball.return_direction_y() > 0:
-                ball.change_direction_with_platform(platform.return_platfroma())
+                ball.change_direction_with_platform(platform.return_platform())
 
-            number_brick_delete = ball.return_ball().collidelist(bricks.bricks_list())
+            number_brick_delete = ball.return_ball().collidelist(bricks.get_bricks_list())
             if number_brick_delete != -1:
                 deleted_brick = bricks.delete_brick(number_brick_delete)
                 ball.change_direction_with_brick(deleted_brick)
 
             if ball.return_ball().bottom > HEIGHT:
-                exit()
+                running = False
+
            # Добавить победу и более красочное поражение (экран поражения)
 
             pygame.display.flip()
-            
+            client.donePackage()            
+    pygame.quit()
+    client.close()

@@ -24,7 +24,7 @@ class BrickManager:
             self.state.update(arrivedState)
 
 
-brickManager = BrickManager({"0 0": "+", "1 1": "+", "3 2": "+", "3 4": "+", "2 3": "+"})
+# brickManager = BrickManager({"0 0": "+", "1 1": "+", "3 2": "+", "3 4": "+", "2 3": "+"})
 
 
 class GameConnectionPull:
@@ -36,7 +36,7 @@ class GameConnectionPull:
         for _ in self.ids:
             if self.ids[_] != False:
                 data[_] = self.ids[_].data
-        data["s"] = {"BrickManager": {"state": brickManager.getState()} }
+        # data["s"] = {"BrickManager": {"state": brickManager.getState()} }
         return json.dumps(data)
 
 
@@ -63,14 +63,20 @@ class GameConnection(threading.Thread):
         self.client_socket.send(f"{self.id}".encode())
         while True:
             try:
-                package = self.client_socket.recv(PACKAGE_SIZE)
+                package = self.client_socket.recv(PACKAGE_SIZE).decode()
                 if package == b"":
                     break   
-                self.data = json.loads(package.decode())
-                if "BrickManager" in self.data:
-                    brickManager.updateState(self.data["BrickManager"])
-                    self.data.pop("BrickManager")
+                try:
+                    self.data = json.loads(package)
+                except:
+                    logger.info(package)
+                # logger.info(package)
+                # if "BrickManager" in self.data:
+                    # brickManager.updateState(self.data["BrickManager"])
+                    # self.data.pop("BrickManager")
                 self.client_socket.sendall(connections.prepareData().encode())
+            except ConnectionAbortedError:
+                break
             except ConnectionResetError:
                 break
             except BrokenPipeError:
