@@ -120,9 +120,9 @@ def detect_collision(dx, dy, ball, rect):
 
 
 if __name__ == '__main__':
-    client = GameTCPClient(HOST, globals(), globalsEnabled=True)
-    client.start()
-    client.isInitDone.wait()
+    # client = GameTCPClient(HOST, globals(), globalsEnabled=True)
+    # client.start()
+    # client.isInitDone.wait()
 
 
     pygame.init()
@@ -134,7 +134,8 @@ if __name__ == '__main__':
     start_game = False
     # фон добавить надо любой
     bricks = BrickManager(55, 30, 50, 25, 100, 10)
-    platform = client.synchronize(Platform, None, w=330, h=35, s=15)
+    # platform = client.synchronize(Platform, None, w=330, h=35, s=15)
+    platform = Platform(330, 35, 15)
     ball = Ball(20, 6)
     while running:
         for event in pygame.event.get():
@@ -146,9 +147,9 @@ if __name__ == '__main__':
 
         if start_game:
             clock.tick(fps)
-            package = client.getPackage()
-            if package:
-                client.processPackage(package)
+            # package = client.getPackage()
+            # if package:
+            #     client.processPackage(package)
 
 
             screen.blit(img, (0, 0))
@@ -180,6 +181,6 @@ if __name__ == '__main__':
            # Добавить победу и более красочное поражение (экран поражения)
 
             pygame.display.flip()
-            client.donePackage()            
+            # client.donePackage()            
     pygame.quit()
-    client.close()
+    # client.close()
