@@ -1,44 +1,47 @@
 import pygame
+
+from GameClient import ISynchronizedObject
+
 WIDTH, HEIGHT = 1200, 600
 fps = 60
 
 
-class Bricks:
+class BrickManager:
     def __init__(self, left, top, size_w, size_h, kol_vo_w, kol_vo_h):
-        self.kirpichi = [pygame.Rect(1 + left * i, 1 + top * j, size_w, size_h)
+        self.bricks = [pygame.Rect(1 + left * i, 1 + top * j, size_w, size_h)
                          for i in range(kol_vo_w) for j in range(kol_vo_h)]
 
-    def delete_kirpich(self, number_kirpich_which_delete):
-        return self.kirpichi.pop(number_kirpich_which_delete)
+    def delete_brick(self, number_brick_which_delete):
+        return self.bricks.pop(number_brick_which_delete)
     
-    def render_kirpichi(self, sc):
-        [pygame.draw.rect(sc, 'green', kirpich) for c, kirpich in enumerate(self.kirpichi)]
+    def render_bricks(self, screen):
+        [pygame.draw.rect(screen, 'green', brick) for c, brick in enumerate(self.bricks)]
 
-    def kirpichi_list(self):
-        return self.kirpichi
+    def bricks_list(self):
+        return self.bricks
 
 
-class Platforma:
+class Platform:
     def __init__(self, w, h, s):
         self.x, self.y = 0, 0
         self.platform_width = w
         self.platform_height = h
         self.platform_speed = s
-        self.platforma = pygame.Rect(WIDTH // 2 - self.platform_width // 2, HEIGHT - self.platform_height - 10,
+        self.platform = pygame.Rect(WIDTH // 2 - self.platform_width // 2, HEIGHT - self.platform_height - 10,
                                      self.platform_width, self.platform_height)
 
     def move_platform(self, coord_mouse):
         self.x, self.y = coord_mouse
-        self.platforma.left = self.x - 165
+        self.platform.left = self.x - 165
 
-    def collide_with_platforma(self, ball):
-        return ball.colliderect(self.platforma)
+    def collide_with_platform(self, ball):
+        return ball.colliderect(self.platform)
 
-    def render_platform(self, sc):
-        pygame.draw.rect(sc, pygame.Color('darkblue'), self.platforma)
+    def render_platform(self, screen):
+        pygame.draw.rect(screen, pygame.Color('darkblue'), self.platform)
 
     def return_platfroma(self):
-        return self.platforma
+        return self.platform
 
     def return_height(self):
         return self.platform_height
@@ -46,45 +49,36 @@ class Platforma:
 
 class Ball:
     def __init__(self, r, s):
-        self.charik_raduis = r
-        self.charick_speed = s
-        self.charick_rect = int(self.charik_raduis * 2 ** 0.5)
-        self.napravl_x, self.napravl_y = 1, -1
-        self.ball = pygame.Rect(WIDTH // 2, HEIGHT - 35 - 100, self.charick_rect, self.charick_rect)
+        self.ball_raduis = r
+        self.ball_speed = s
+        self.ball_rect = int(self.ball_raduis * 2 ** 0.5)
+        self.direction_x, self.direction_y = 1, -1
+        self.ball = pygame.Rect(WIDTH // 2, HEIGHT - 35 - 100, self.ball_rect, self.ball_rect)
 
-    def render_ball(self, sc):
-        pygame.draw.circle(sc, pygame.Color('white'), self.ball.center, self.charik_raduis)
+    def render_ball(self, screen):
+        pygame.draw.circle(screen, pygame.Color('white'), self.ball.center, self.ball_raduis)
 
     def movement_ball(self):
-        self.ball.x += self.charick_speed * self.napravl_x
-        self.ball.y += self.charick_speed * self.napravl_y
+        self.ball.x += self.ball_speed * self.direction_x
+        self.ball.y += self.ball_speed * self.direction_y
 
-    def change_napravl(self):
-        if self.ball.centerx < self.charik_raduis or self.ball.centerx > WIDTH - self.charik_raduis:
-            self.napravl_x *= -1
-        if self.ball.centery < self.charik_raduis:
-            self.napravl_y *= -1
-
-    def colision_ball(self):
-        pass
-
-    def ball_position_x(self):
-        pass
-
-    def ball_posotion_y(self):
-        pass
+    def change_direction(self):
+        if self.ball.centerx < self.ball_raduis or self.ball.centerx > WIDTH - self.ball_raduis:
+            self.direction_x *= -1
+        if self.ball.centery < self.ball_raduis:
+            self.direction_y *= -1
 
     def return_ball(self):
         return self.ball
 
-    def return_napravl_y(self):
-        return self.napravl_y
+    def return_direction_y(self):
+        return self.direction_y
 
-    def change_napravl_with_kirpich(self, deleted):
-        self.napravl_x, self.napravl_y = detect_collision(self.napravl_x, self.napravl_y, self.ball, deleted)
+    def change_direction_with_brick(self, deleted):
+        self.direction_x, self.direction_y = detect_collision(self.direction_x, self.direction_y, self.ball, deleted)
 
-    def change_napravl_with_platform(self, platformaa):
-        self.napravl_x, self.napravl_y = detect_collision(self.napravl_x, self.napravl_y, self.ball, platformaa)
+    def change_direction_with_platform(self, platform):
+        self.direction_x, self.direction_y = detect_collision(self.direction_x, self.direction_y, self.ball, platform)
         # Надо добавить разные коэффициенты на касания с разными частями платформы чем ближе к центру тем прямее отскок
         # А то получается оно как отсутствие двд диска прыгает запрограммировано
 
@@ -111,30 +105,31 @@ def detect_collision(dx, dy, ball, rect):
 if __name__ == '__main__':
     pygame.init()
     pygame.display.set_caption('arkanoid')
-    sc = pygame.display.set_mode((WIDTH, HEIGHT))
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))
     clock = pygame.time.Clock()
     img = pygame.image.load('1.jpg').convert()
-    runniing = True
+    running = True
     start_game = False
     # фон добавить надо любой
-    kirpichi = Bricks(55, 30, 50, 25, 100, 10)
-    pltfrm = Platforma(330, 35, 15)
-    class_ball = Ball(20, 6)
-    while runniing:
+    bricks = BrickManager(55, 30, 50, 25, 100, 10)
+    platform = Platform(330, 35, 15)
+    ball = Ball(20, 6)
+    while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                runniing = False
+                running = False
             if event.type == pygame.MOUSEBUTTONDOWN:
                 start_game = True
                 pygame.mouse.set_visible(False)
 
         if start_game:
-            sc.blit(img, (0, 0))
-            kirpichi.render_kirpichi(sc)
-            pltfrm.render_platform(sc)
-            class_ball.render_ball(sc)
+            clock.tick(fps)
+            screen.blit(img, (0, 0))
+            bricks.render_bricks(screen)
+            platform.render_platform(screen)
+            ball.render_ball(screen)
 
-            pltfrm.move_platform(pygame.mouse.get_pos())
+            platform.move_platform(pygame.mouse.get_pos())
 
         
             pygame.display.flip()
@@ -142,19 +137,19 @@ if __name__ == '__main__':
             pygame.mouse.set_visible(True)
 
 
-            class_ball.movement_ball()
-            class_ball.change_napravl()
-            if pltfrm.collide_with_platforma(class_ball.return_ball()) and class_ball.return_napravl_y() > 0:
-                class_ball.change_napravl_with_platform(pltfrm.return_platfroma())
+            ball.movement_ball()
+            ball.change_direction()
+            if platform.collide_with_platform(ball.return_ball()) and ball.return_direction_y() > 0:
+                ball.change_direction_with_platform(platform.return_platfroma())
 
-            number_kirpich_delete = class_ball.return_ball().collidelist(kirpichi.kirpichi_list())
-            if number_kirpich_delete != -1:
-                deleted_kirpich = kirpichi.delete_kirpich(number_kirpich_delete)
-                class_ball.change_napravl_with_kirpich(deleted_kirpich)
+            number_brick_delete = ball.return_ball().collidelist(bricks.bricks_list())
+            if number_brick_delete != -1:
+                deleted_brick = bricks.delete_brick(number_brick_delete)
+                ball.change_direction_with_brick(deleted_brick)
 
-            if class_ball.return_ball().bottom > HEIGHT:
+            if ball.return_ball().bottom > HEIGHT:
                 exit()
            # Добавить победу и более красочное поражение (экран поражения)
 
             pygame.display.flip()
-            clock.tick(fps)
+            
