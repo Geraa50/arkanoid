@@ -87,7 +87,7 @@ class GameTCPClient(threading.Thread):
                 break
             if not self.getPackage() and self.data:
                 data = self.formJSON(self.data)
-                logger.info(data)
+                # logger.info(data)
                 # logger.debug(f"Send: {data}")
                 self.send(data.encode())
                 package = self.recv(PACKAGE_SIZE).decode()
