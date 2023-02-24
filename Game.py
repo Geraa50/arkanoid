@@ -90,6 +90,9 @@ class BrickManager(ISynchronizedObject):
 
     def setPackingData(self, data):
         # logger.debug(data)
+        # logger.debug(data)
+        if data == {}:
+            return
         state = data["state"]
         # {"0 0": "+", "1 0": "-", ...}
         for coords, state in state.items():
