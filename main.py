@@ -6,6 +6,7 @@ from loguru import logger
 logger.add("file.log", backtrace=True, diagnose=True, enqueue=True) 
 
 
+allPlatforms = pygame.sprite.Group()
 WIDTH, HEIGHT = 1200, 600
 fps = 60
 
@@ -25,14 +26,18 @@ class BrickManager():
         return self.bricks
 
 
-class Platform(ISynchronizedObject):
+class Platform(pygame.sprite.Sprite, ISynchronizedObject):
     def __init__(self, w, h, s):
+        ISynchronizedObject.__init__(self)
+        super().__init__(allPlatforms)
         self.x, self.y = 0, 0
         self.platform_width = w
         self.platform_height = h
         self.platform_speed = s
-        self.platform = pygame.Rect(WIDTH // 2 - self.platform_width // 2, HEIGHT - self.platform_height - 10,
-                                     self.platform_width, self.platform_height)
+        self.rect = pygame.Rect(WIDTH // 2 - self.platform_width // 2, HEIGHT - self.platform_height - 10,
+                                self.platform_width, self.platform_height)
+        self.image = pygame.Surface((w, h))
+        pygame.draw.rect(self.image, pygame.Color('darkblue'), (0, 0, w, h))
 
     @staticmethod
     def getInitSyncObjectData(packageDict):
@@ -45,24 +50,28 @@ class Platform(ISynchronizedObject):
         return {"coords": (self.x, self.y)}
 
     def setPackingData(self, data):
-        self.platform.left = data["coords"][0] - 165
+        self.x = data["coords"][0]
 
-    def move_platform(self, coord_mouse):
-        self.x, self.y = coord_mouse
-        self.platform.left = self.x - 165
+    # def move_platform(self, coord_mouse):
+    #     self.x, self.y = coord_mouse
+    #     self.platform.left = self.x - 165
 
     def collide_with_platform(self, ball):
-        return ball.colliderect(self.platform)
-
-    def render_platform(self, screen):
-        pygame.draw.rect(screen, pygame.Color('darkblue'), self.platform)
-
+        return ball.colliderect(self.rect)
+        
     def return_platform(self):
-        return self.platform
+        return self.rect
 
     def return_height(self):
         return self.platform_height
 
+    def remove(self):
+        for _ in self.groups():
+            _.remove(self)
+
+    def update(self, mousepos):
+        self.rect.x = mousepos[0]
+    
 
 class Ball():
     def __init__(self, r, s):
@@ -120,9 +129,9 @@ def detect_collision(dx, dy, ball, rect):
 
 
 if __name__ == '__main__':
-    # client = GameTCPClient(HOST, globals(), globalsEnabled=True)
-    # client.start()
-    # client.isInitDone.wait()
+    client = GameTCPClient(HOST, globals(), globalsEnabled=True)
+    client.start()
+    client.isInitDone.wait()
 
 
     pygame.init()
@@ -134,8 +143,8 @@ if __name__ == '__main__':
     start_game = False
     # фон добавить надо любой
     bricks = BrickManager(55, 30, 50, 25, 100, 10)
-    # platform = client.synchronize(Platform, None, w=330, h=35, s=15)
-    platform = Platform(330, 35, 15)
+    platform = client.synchronize(Platform, None, w=330, h=35, s=15)
+    # platform = Platform(330, 35, 15)
     ball = Ball(20, 6)
     while running:
         for event in pygame.event.get():
@@ -147,17 +156,17 @@ if __name__ == '__main__':
 
         if start_game:
             clock.tick(fps)
-            # package = client.getPackage()
-            # if package:
-            #     client.processPackage(package)
+            package = client.getPackage()
+            if package:
+                client.processPackage(package)
 
 
             screen.blit(img, (0, 0))
             bricks.render_bricks(screen)
-            platform.render_platform(screen)
             ball.render_ball(screen)
 
-            platform.move_platform(pygame.mouse.get_pos())
+            allPlatforms.draw(screen)
+            platform.update(pygame.mouse.get_pos())
 
         
             pygame.display.flip()
@@ -181,6 +190,6 @@ if __name__ == '__main__':
            # Добавить победу и более красочное поражение (экран поражения)
 
             pygame.display.flip()
-            # client.donePackage()            
+            client.donePackage()            
     pygame.quit()
-    # client.close()
+    client.close()

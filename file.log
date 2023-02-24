@@ -15907,3 +15907,7 @@ on-InId:1-CId:0": {"coords": [248, 221]}, "BrickManager": {"3 2": "-"}}
 2023-02-23 15:19:43.218 | INFO     | GameConnection:runPackageCycle:73 - {"Person-InId:1-CId:0": {"coords": [100, 200]}, "BrickManager": {}}
 2023-02-23 15:19:43.238 | INFO     | GameConnection:runPackageCycle:73 - {"Person-InId:1-CId:0": {"coords": [100, 200]}, "BrickManager": {}}
 2023-02-23 15:19:43.268 | INFO     | GameConnection:runPackageCycle:73 - {"Person-InId:1-CId:0": {"coords": [100, 200]}, "BrickManager": {}}
+2023-02-24 16:28:25.424 | INFO     | GameConnection:run:56 - ('127.0.0.1', 59701)
+2023-02-24 16:28:29.106 | INFO     | GameConnection:runPackageCycle:73 - {"Platform-InId:1-CId:0": {"coords": [0, 0]}}
+2023-02-24 16:28:49.014 | INFO     | GameConnection:run:56 - ('127.0.0.1', 59705)
+2023-02-24 16:28:49.395 | INFO     | GameConnection:runPackageCycle:73 - {"Platform-InId:1-CId:1": {"coords": [0, 0]}}
