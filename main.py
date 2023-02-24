@@ -7,6 +7,7 @@ logger.add("file.log", backtrace=True, diagnose=True, enqueue=True)
 
 
 allPlatforms = pygame.sprite.Group()
+ballSprite = pygame.sprite.Group()
 WIDTH, HEIGHT = 1200, 600
 fps = 60
 
@@ -41,16 +42,14 @@ class Platform(pygame.sprite.Sprite, ISynchronizedObject):
 
     @staticmethod
     def getInitSyncObjectData(packageDict):
-        # logger.debug(packageDict)
         init_dict = {"w": 330, "h": 35, "s": 15}
-        # logger.debug(init_dict)
         return init_dict
 
     def returnPackingData(self):
-        return {"coords": (self.x, self.y)}
+        return {"x": self.rect.x}
 
     def setPackingData(self, data):
-        self.x = data["coords"][0]
+        self.rect.x = data["x"]
 
     # def move_platform(self, coord_mouse):
     #     self.x, self.y = coord_mouse
@@ -73,38 +72,43 @@ class Platform(pygame.sprite.Sprite, ISynchronizedObject):
         self.rect.x = mousepos[0]
     
 
-class Ball():
+class Ball(pygame.sprite.Sprite, ISynchronizedObject):
     def __init__(self, r, s):
+        ISynchronizedObject.__init__(self)
+        super().__init__(ballSprite)
         self.ball_raduis = r
         self.ball_speed = s
         self.ball_rect = int(self.ball_raduis * 2 ** 0.5)
         self.direction_x, self.direction_y = 1, -1
-        self.ball = pygame.Rect(WIDTH // 2, HEIGHT - 35 - 100, self.ball_rect, self.ball_rect)
+        self.rect = pygame.Rect(WIDTH // 2, HEIGHT - 35 - 100, self.ball_rect, self.ball_rect)
+        self.image = pygame.Surface((r * 2, r * 2))
+        pygame.draw.circle(self.image, pygame.Color('white'), (r, r), r)
 
-    def render_ball(self, screen):
-        pygame.draw.circle(screen, pygame.Color('white'), self.ball.center, self.ball_raduis)
+    def setPackingData(self, data):
+        if data:
+            self.rect.x, self.rect.y = data[0], data[1]
 
     def movement_ball(self):
-        self.ball.x += self.ball_speed * self.direction_x
-        self.ball.y += self.ball_speed * self.direction_y
+        self.rect.x += self.ball_speed * self.direction_x
+        self.rect.y += self.ball_speed * self.direction_y
 
     def change_direction(self):
-        if self.ball.centerx < self.ball_raduis or self.ball.centerx > WIDTH - self.ball_raduis:
+        if self.rect.centerx < self.ball_raduis or self.rect.centerx > WIDTH - self.ball_raduis:
             self.direction_x *= -1
-        if self.ball.centery < self.ball_raduis:
+        if self.rect.centery < self.ball_raduis:
             self.direction_y *= -1
 
     def return_ball(self):
-        return self.ball
+        return self.rect
 
     def return_direction_y(self):
         return self.direction_y
 
     def change_direction_with_brick(self, deleted):
-        self.direction_x, self.direction_y = detect_collision(self.direction_x, self.direction_y, self.ball, deleted)
+        self.direction_x, self.direction_y = detect_collision(self.direction_x, self.direction_y, self.rect, deleted)
 
     def change_direction_with_platform(self, platform):
-        self.direction_x, self.direction_y = detect_collision(self.direction_x, self.direction_y, self.ball, platform)
+        self.direction_x, self.direction_y = detect_collision(self.direction_x, self.direction_y, self.rect, platform)
         # Надо добавить разные коэффициенты на касания с разными частями платформы чем ближе к центру тем прямее отскок
         # А то получается оно как отсутствие двд диска прыгает запрограммировано
 
@@ -145,7 +149,8 @@ if __name__ == '__main__':
     bricks = BrickManager(55, 30, 50, 25, 100, 10)
     platform = client.synchronize(Platform, None, w=330, h=35, s=15)
     # platform = Platform(330, 35, 15)
-    ball = Ball(20, 6)
+    ball = client.synchronize(Ball, "Ball", r=20, s=6)
+    # ball = Ball(20, 6)
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -163,7 +168,7 @@ if __name__ == '__main__':
 
             screen.blit(img, (0, 0))
             bricks.render_bricks(screen)
-            ball.render_ball(screen)
+            ballSprite.draw(screen)
 
             allPlatforms.draw(screen)
             platform.update(pygame.mouse.get_pos())
@@ -174,7 +179,7 @@ if __name__ == '__main__':
             pygame.mouse.set_visible(True)
 
 
-            ball.movement_ball()
+            # ball.movement_ball()
             ball.change_direction()
             if platform.collide_with_platform(ball.return_ball()) and ball.return_direction_y() > 0:
                 ball.change_direction_with_platform(platform.return_platform())
@@ -184,8 +189,8 @@ if __name__ == '__main__':
                 deleted_brick = bricks.delete_brick(number_brick_delete)
                 ball.change_direction_with_brick(deleted_brick)
 
-            if ball.return_ball().bottom > HEIGHT:
-                running = False
+            # if ball.return_ball().bottom > HEIGHT:
+            #     running = False
 
            # Добавить победу и более красочное поражение (экран поражения)
 
