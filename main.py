@@ -1,6 +1,5 @@
 import pygame
-
-from GameClient import ISynchronizedObject
+import sys
 
 WIDTH, HEIGHT = 1200, 600
 fps = 60
@@ -9,16 +8,25 @@ fps = 60
 class BrickManager:
     def __init__(self, left, top, size_w, size_h, kol_vo_w, kol_vo_h):
         self.bricks = [pygame.Rect(1 + left * i, 1 + top * j, size_w, size_h)
-                         for i in range(kol_vo_w) for j in range(kol_vo_h)]
+                       for i in range(kol_vo_w) for j in range(kol_vo_h)]
 
     def delete_brick(self, number_brick_which_delete):
         return self.bricks.pop(number_brick_which_delete)
-    
+
     def render_bricks(self, screen):
         [pygame.draw.rect(screen, 'green', brick) for c, brick in enumerate(self.bricks)]
 
-    def bricks_list(self):
+    def get_bricks_list(self):
         return self.bricks
+
+    def detect_finish(self):
+        if self.bricks:
+            return False
+        else:
+            return True
+
+    def get_brick_quantity(self):
+        return len(self.bricks)
 
 
 class Platform:
@@ -28,7 +36,7 @@ class Platform:
         self.platform_height = h
         self.platform_speed = s
         self.platform = pygame.Rect(WIDTH // 2 - self.platform_width // 2, HEIGHT - self.platform_height - 10,
-                                     self.platform_width, self.platform_height)
+                                    self.platform_width, self.platform_height)
 
     def move_platform(self, coord_mouse):
         self.x, self.y = coord_mouse
@@ -40,7 +48,7 @@ class Platform:
     def render_platform(self, screen):
         pygame.draw.rect(screen, pygame.Color('darkblue'), self.platform)
 
-    def return_platfroma(self):
+    def return_platform(self):
         return self.platform
 
     def return_height(self):
@@ -102,16 +110,117 @@ def detect_collision(dx, dy, ball, rect):
     return dx, dy
 
 
+def terminate():
+    pygame.quit()
+    sys.exit()
+
+
+def start_screen():
+    start_fps = 1
+    intro_text = ["Press any key to start game"]
+
+    fon = pygame.image.load('start_game.png').convert()
+    fon = pygame.transform.scale(fon, (WIDTH, HEIGHT))
+    screen.blit(fon, (0, 0))
+    font = pygame.font.Font('Pentapixel.ttf', 33)
+    red_or_blue = 0
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.KEYDOWN or \
+                    event.type == pygame.MOUSEBUTTONDOWN:
+                return  # начинаем игру
+        for line in intro_text:
+            if red_or_blue:
+                string_rendered = font.render(line, True, pygame.Color('blue'))
+                red_or_blue = 0
+            else:
+                string_rendered = font.render(line, True, pygame.Color('red'))
+                red_or_blue = 1
+            intro_rect = string_rendered.get_rect()
+            screen.blit(string_rendered, intro_rect)
+        pygame.display.flip()
+        clock.tick(start_fps)
+
+
+def finish_screen(score):
+    start_fps = 1
+    #intro_text = ["   Victory!                        "
+    #              "                                                      Press any key to restart game"]
+    intro_text = []
+    print(score)
+    intro_text.append(f' Victory!{" " * 50}your score:{score}{" " * 22}Press any key to restart game')
+
+    fon = pygame.image.load('finish_window_v2_version.png').convert()
+    fon = pygame.transform.scale(fon, (WIDTH, HEIGHT))
+    screen.blit(fon, (0, 0))
+    font = pygame.font.Font('Pentapixel.ttf', 33)
+    red_or_blue = 0
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.KEYDOWN or \
+                    event.type == pygame.MOUSEBUTTONDOWN:
+                return BrickManager(55, 30, 1200, 200, bricks_quantity_w, bricks_quantity_h), Platform(330, 35, 15), Ball(20, 6)
+        for line in intro_text:
+            if red_or_blue:
+                string_rendered = font.render(line, True, pygame.Color('red'))
+                red_or_blue = 0
+            else:
+                string_rendered = font.render(line, True, pygame.Color('yellow'))
+                red_or_blue = 1
+            intro_rect = string_rendered.get_rect()
+            screen.blit(string_rendered, intro_rect)
+        pygame.display.flip()
+        clock.tick(start_fps)
+
+
+def game_over_screen():
+    start_fps = 1
+    intro_text = []
+    intro_text.append(f'   Game Over!{" " * 76}Press any key to restart game')
+
+    fon = pygame.image.load('finish_window_v3.png').convert()
+    fon = pygame.transform.scale(fon, (WIDTH, HEIGHT))
+    screen.blit(fon, (0, 0))
+    font = pygame.font.Font('Pentapixel.ttf', 33)
+    red_or_blue = 0
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.KEYDOWN or \
+                    event.type == pygame.MOUSEBUTTONDOWN:
+                return BrickManager(55, 30, 1200, 200, bricks_quantity_w, bricks_quantity_h), Platform(330, 35, 15), Ball(20, 6)
+        for line in intro_text:
+            if red_or_blue:
+                string_rendered = font.render(line, True, pygame.Color('blue'))
+                red_or_blue = 0
+            else:
+                string_rendered = font.render(line, True, pygame.Color('red'))
+                red_or_blue = 1
+            intro_rect = string_rendered.get_rect()
+            screen.blit(string_rendered, intro_rect)
+        pygame.display.flip()
+        clock.tick(start_fps)
+
+
 if __name__ == '__main__':
     pygame.init()
     pygame.display.set_caption('arkanoid')
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     clock = pygame.time.Clock()
     img = pygame.image.load('1.jpg').convert()
+    start_screen()
     running = True
-    start_game = False
-    # фон добавить надо любой
-    bricks = BrickManager(55, 30, 50, 25, 100, 10)
+    start_game = True
+
+    bricks_quantity_w = 1
+    bricks_quantity_h = 1
+    bricks_quantity = bricks_quantity_w * bricks_quantity_w
+    bricks = BrickManager(55, 30, 1200, 200, bricks_quantity_w, bricks_quantity_h)
     platform = Platform(330, 35, 15)
     ball = Ball(20, 6)
     while running:
@@ -124,6 +233,7 @@ if __name__ == '__main__':
 
         if start_game:
             clock.tick(fps)
+
             screen.blit(img, (0, 0))
             bricks.render_bricks(screen)
             platform.render_platform(screen)
@@ -131,25 +241,25 @@ if __name__ == '__main__':
 
             platform.move_platform(pygame.mouse.get_pos())
 
-        
             pygame.display.flip()
             # pygame.mouse.set_pos(WIDTH // 2, HEIGHT // 2)
             pygame.mouse.set_visible(True)
 
-
             ball.movement_ball()
             ball.change_direction()
             if platform.collide_with_platform(ball.return_ball()) and ball.return_direction_y() > 0:
-                ball.change_direction_with_platform(platform.return_platfroma())
+                ball.change_direction_with_platform(platform.return_platform())
 
-            number_brick_delete = ball.return_ball().collidelist(bricks.bricks_list())
+            number_brick_delete = ball.return_ball().collidelist(bricks.get_bricks_list())
             if number_brick_delete != -1:
                 deleted_brick = bricks.delete_brick(number_brick_delete)
                 ball.change_direction_with_brick(deleted_brick)
 
+            if bricks.detect_finish():
+                bricks, platform, ball = finish_screen(bricks_quantity)
+                #
             if ball.return_ball().bottom > HEIGHT:
-                exit()
-           # Добавить победу и более красочное поражение (экран поражения)
+                bricks, platform, ball = game_over_screen()
 
             pygame.display.flip()
-            
+    pygame.quit()
