@@ -29,19 +29,6 @@ class Platform:
         self.platform = pygame.Rect(WIDTH // 2 - self.platform_width // 2, HEIGHT - self.platform_height - 10,
                                     self.platform_width, self.platform_height)
 
-    @staticmethod
-    def getInitSyncObjectData(packageDict):
-        # logger.debug(packageDict)
-        init_dict = {"w": 330, "h": 35, "s": 15}
-        # logger.debug(init_dict)
-        return init_dict
-
-    def returnPackingData(self):
-        return {"coords": (self.x, self.y)}
-
-    def setPackingData(self, data):
-        self.platform.left = data["coords"][0] - 165
-
     def move_platform(self, coord_mouse):
         self.x, self.y = coord_mouse
         self.platform.left = self.x - 165
@@ -149,10 +136,6 @@ def start_screen():
 
 
 if __name__ == '__main__':
-    # client = GameTCPClient(HOST, globals(), globalsEnabled=True)
-    # client.start()
-    # client.isInitDone.wait()
-
     pygame.init()
     pygame.display.set_caption('arkanoid')
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
