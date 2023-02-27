@@ -1,6 +1,5 @@
 import pygame
-
-from GameClient import ISynchronizedObject
+import sys
 
 WIDTH, HEIGHT = 1200, 600
 fps = 60
@@ -9,15 +8,15 @@ fps = 60
 class BrickManager:
     def __init__(self, left, top, size_w, size_h, kol_vo_w, kol_vo_h):
         self.bricks = [pygame.Rect(1 + left * i, 1 + top * j, size_w, size_h)
-                         for i in range(kol_vo_w) for j in range(kol_vo_h)]
+                       for i in range(kol_vo_w) for j in range(kol_vo_h)]
 
     def delete_brick(self, number_brick_which_delete):
         return self.bricks.pop(number_brick_which_delete)
-    
+
     def render_bricks(self, screen):
         [pygame.draw.rect(screen, 'green', brick) for c, brick in enumerate(self.bricks)]
 
-    def bricks_list(self):
+    def get_bricks_list(self):
         return self.bricks
 
 
@@ -28,7 +27,20 @@ class Platform:
         self.platform_height = h
         self.platform_speed = s
         self.platform = pygame.Rect(WIDTH // 2 - self.platform_width // 2, HEIGHT - self.platform_height - 10,
-                                     self.platform_width, self.platform_height)
+                                    self.platform_width, self.platform_height)
+
+    @staticmethod
+    def getInitSyncObjectData(packageDict):
+        # logger.debug(packageDict)
+        init_dict = {"w": 330, "h": 35, "s": 15}
+        # logger.debug(init_dict)
+        return init_dict
+
+    def returnPackingData(self):
+        return {"coords": (self.x, self.y)}
+
+    def setPackingData(self, data):
+        self.platform.left = data["coords"][0] - 165
 
     def move_platform(self, coord_mouse):
         self.x, self.y = coord_mouse
@@ -40,7 +52,7 @@ class Platform:
     def render_platform(self, screen):
         pygame.draw.rect(screen, pygame.Color('darkblue'), self.platform)
 
-    def return_platfroma(self):
+    def return_platform(self):
         return self.platform
 
     def return_height(self):
@@ -102,14 +114,53 @@ def detect_collision(dx, dy, ball, rect):
     return dx, dy
 
 
+def terminate():
+    pygame.quit()
+    sys.exit()
+
+
+def start_screen():
+    start_fps = 1
+    intro_text = ["Press any key to start game"]
+
+    fon = pygame.image.load('start_game.png').convert()
+    fon = pygame.transform.scale(fon, (WIDTH, HEIGHT))
+    screen.blit(fon, (0, 0))
+    font = pygame.font.Font('Pentapixel.ttf', 33)
+    red_or_blue = 0
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.KEYDOWN or \
+                    event.type == pygame.MOUSEBUTTONDOWN:
+                return  # начинаем игру
+        for line in intro_text:
+            if red_or_blue:
+                string_rendered = font.render(line, 1, pygame.Color('blue'))
+                red_or_blue = 0
+            else:
+                string_rendered = font.render(line, 1, pygame.Color('red'))
+                red_or_blue = 1
+            intro_rect = string_rendered.get_rect()
+            screen.blit(string_rendered, intro_rect)
+        pygame.display.flip()
+        clock.tick(start_fps)
+
+
 if __name__ == '__main__':
+    # client = GameTCPClient(HOST, globals(), globalsEnabled=True)
+    # client.start()
+    # client.isInitDone.wait()
+
     pygame.init()
     pygame.display.set_caption('arkanoid')
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     clock = pygame.time.Clock()
     img = pygame.image.load('1.jpg').convert()
+    start_screen()
     running = True
-    start_game = False
+    start_game = True
     # фон добавить надо любой
     bricks = BrickManager(55, 30, 50, 25, 100, 10)
     platform = Platform(330, 35, 15)
@@ -124,6 +175,7 @@ if __name__ == '__main__':
 
         if start_game:
             clock.tick(fps)
+
             screen.blit(img, (0, 0))
             bricks.render_bricks(screen)
             platform.render_platform(screen)
@@ -131,25 +183,24 @@ if __name__ == '__main__':
 
             platform.move_platform(pygame.mouse.get_pos())
 
-        
             pygame.display.flip()
             # pygame.mouse.set_pos(WIDTH // 2, HEIGHT // 2)
             pygame.mouse.set_visible(True)
 
-
             ball.movement_ball()
             ball.change_direction()
             if platform.collide_with_platform(ball.return_ball()) and ball.return_direction_y() > 0:
-                ball.change_direction_with_platform(platform.return_platfroma())
+                ball.change_direction_with_platform(platform.return_platform())
 
-            number_brick_delete = ball.return_ball().collidelist(bricks.bricks_list())
+            number_brick_delete = ball.return_ball().collidelist(bricks.get_bricks_list())
             if number_brick_delete != -1:
                 deleted_brick = bricks.delete_brick(number_brick_delete)
                 ball.change_direction_with_brick(deleted_brick)
 
             if ball.return_ball().bottom > HEIGHT:
-                exit()
-           # Добавить победу и более красочное поражение (экран поражения)
+                running = False
+
+            # Добавить победу и более красочное поражение (экран поражения)
 
             pygame.display.flip()
-            
+    pygame.quit()
