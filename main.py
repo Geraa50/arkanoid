@@ -11,7 +11,7 @@ if __name__ == "__main__":
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
 
-def load_sprite(name, colorkey=None): # не работает без предварительной инициализации pygame
+def load_sprite(name, colorkey=None):  # не работает без предварительной инициализации pygame
     # если файл не существует, то выходим
     if not os.path.isfile(name):
         print(f"Файл с изображением '{name}' не найден")
@@ -44,8 +44,8 @@ class Brick(pygame.sprite.Sprite):
         return self.rect
 
 
-class BrickManager():
-    def __init__(self, left, top, size_w, size_h, kol_vo_w, kol_vo_h):
+class BrickManager:
+    def __init__(self, left, top, kol_vo_w, kol_vo_h):
         self.bricks = [Brick(1 + left * i, 1 + top * j)
                        for i in range(kol_vo_w) for j in range(kol_vo_h)]
 
@@ -81,7 +81,7 @@ class Platform(pygame.sprite.Sprite):
         self.rect_speed = s
         self.image = Platform.image
         self.rect = pygame.Rect(WIDTH // 2 - self.rect_width // 2, HEIGHT - self.rect_height - 10,
-                                    self.rect_width, self.rect_height)
+                                self.rect_width, self.rect_height)
 
     def move_platform(self, coord_mouse):
         self.x, self.y = coord_mouse
@@ -172,7 +172,7 @@ def game_field_init():
     if ballSprite:
         for _ in ballSprite:
             ballSprite.remove(_)
-    return BrickManager(55, 30, 50, 25, 20, 10), Platform(330, 35, 15), Ball(20, 6)
+    return BrickManager(55, 30, 2, 1), Platform(330, 35, 15), Ball(20, 6)
 
 
 font = pygame.font.Font('fonts/Pentapixel.ttf', 33)
@@ -210,11 +210,7 @@ def start_screen():
 def finish_screen(score):
     global font
     start_fps = 1
-    #intro_text = ["   Victory!                        "
-    #              "                                                      Press any key to restart game"]
-    intro_text = []
-    print(score)
-    intro_text.append(f' Victory!{" " * 50}your score:{score}{" " * 22}Press any key to restart game')
+    intro_text = [f' Victory!{" " * 50}your score:{score}{" " * 22}Press any key to restart game']
 
     fon = pygame.image.load('windows/finish_window_v2_version.png').convert()
     fon = pygame.transform.scale(fon, (WIDTH, HEIGHT))
@@ -243,8 +239,7 @@ def finish_screen(score):
 def game_over_screen():
     global font
     start_fps = 1
-    intro_text = []
-    intro_text.append(f'   Game Over!{" " * 76}Press any key to restart game')
+    intro_text = [f'   Game Over!{" " * 76}Press any key to restart game']
 
     fon = pygame.image.load('windows/finish_window_v3.png').convert()
     fon = pygame.transform.scale(fon, (WIDTH, HEIGHT))
@@ -314,7 +309,6 @@ if __name__ == '__main__':
 
             if bricks.detect_finish():
                 bricks, platform, ball = finish_screen(bricks_quantity)
-                #
             if ball.return_ball().bottom > HEIGHT:
                 bricks, platform, ball = game_over_screen()
 
