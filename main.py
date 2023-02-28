@@ -101,7 +101,7 @@ ballSprite = pygame.sprite.Group()
 
 
 class Ball(pygame.sprite.Sprite):
-    image = load_sprite("sprites/ball.png")
+    anim_sprites = [load_sprite(f"sprites/ball_anim/ball_anim{_}.png") for _ in range(1, 10)]
 
     def __init__(self, r, s):
         super().__init__(ballSprite)
@@ -109,7 +109,13 @@ class Ball(pygame.sprite.Sprite):
         self.rect_speed = s
         self.rect_rect = int(self.rect_raduis * 2 ** 0.5)
         self.direction_x, self.direction_y = 1, -1
+        self.image = Ball.anim_sprites[0]
         self.rect = pygame.Rect(WIDTH // 2, HEIGHT - 35 - 100, self.rect_rect, self.rect_rect)
+
+        self.current_frame = 0
+        self.frame_delay = 0
+        self.is_animate = False
+
 
     def movement_ball(self):
         self.rect.x += self.rect_speed * self.direction_x
@@ -120,6 +126,13 @@ class Ball(pygame.sprite.Sprite):
             self.direction_x *= -1
         if self.rect.centery < self.rect_raduis:
             self.direction_y *= -1
+
+    def collide_with_platform(self, rect):
+        if self.rect.colliderect(rect):
+            print("ball colided with platform")
+            self.is_animate = True
+            return True
+        return False
 
     def return_ball(self):
         return self.rect
@@ -134,6 +147,20 @@ class Ball(pygame.sprite.Sprite):
         self.direction_x, self.direction_y = detect_collision(self.direction_x, self.direction_y, self.rect, platform)
         # Надо добавить разные коэффициенты на касания с разными частями платформы чем ближе к центру тем прямее отскок
         # А то получается оно как отсутствие двд диска прыгает запрограммировано
+
+    def update(self, delta):
+        self.frame_delay += delta
+        if self.frame_delay > 0.02:
+            if self.is_animate:
+                if self.current_frame == 9:
+                    self.image = Ball.anim_sprites[0]
+                    self.current_frame = 0
+                    self.is_animate = False
+                    return
+                self.image = Ball.anim_sprites[self.current_frame]
+                self.current_frame += 1
+                self.frame_delay = 0
+
 
 
 def detect_collision(dx, dy, ball, rect):
@@ -172,7 +199,7 @@ def game_field_init():
     if ballSprite:
         for _ in ballSprite:
             ballSprite.remove(_)
-    return BrickManager(55, 30, 2, 1), Platform(330, 35, 15), Ball(20, 6)
+    return BrickManager(55, 30, 10, 2), Platform(330, 35, 15), Ball(20, 6)
 
 
 font = pygame.font.Font('fonts/Pentapixel.ttf', 33)
@@ -285,11 +312,12 @@ if __name__ == '__main__':
                 pygame.mouse.set_visible(False)
 
         if start_game:
-            clock.tick(fps)
+            delta = clock.tick(fps) / 1000
 
             screen.blit(img, (0, 0))
             allBrickSprites.draw(screen)
             platformSprite.draw(screen)
+            ball.update(delta)
             ballSprite.draw(screen)
 
             platform.move_platform(pygame.mouse.get_pos())
@@ -300,7 +328,7 @@ if __name__ == '__main__':
 
             ball.movement_ball()
             ball.change_direction()
-            if platform.collide_with_platform(ball.return_ball()) and ball.return_direction_y() > 0:
+            if ball.collide_with_platform(platform.return_platform()) and ball.return_direction_y() > 0:
                 ball.change_direction_with_platform(platform.return_platform())
             number_brick_delete = ball.return_ball().collidelist(bricks.get_bricks_list())
             if number_brick_delete != -1:
@@ -308,6 +336,7 @@ if __name__ == '__main__':
                 ball.change_direction_with_brick(deleted_brick)
 
             if bricks.detect_finish():
+            # if True:
                 bricks, platform, ball = finish_screen(bricks_quantity)
             if ball.return_ball().bottom > HEIGHT:
                 bricks, platform, ball = game_over_screen()
