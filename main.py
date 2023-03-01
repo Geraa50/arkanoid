@@ -147,7 +147,7 @@ def game_field_init():
         for _ in ballSprite:
             ballSprite.remove(_)
     # gamefield = BrickMapLoader.generate_default_gamefield(55, 30, 10, 2)
-    gamefield = BrickMapLoader(f'maps/map_{randint(1, 2)}.txt').get_brick_map()
+    gamefield = BrickMapLoader(f'maps/map_{randint(1, 2)}.txt').get_brick_map() # randint(1, ...количество уровней) можно добавлять по шаблону map_... .txt
     return BrickManager(gamefield), Platform(330, 35, 15), Ball(20, 6)
 
 
