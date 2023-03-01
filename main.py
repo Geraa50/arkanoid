@@ -1,77 +1,25 @@
 import pygame
 import sys
 import os
+from random import randint
+from load_sprite import load_sprite
 
 WIDTH, HEIGHT = 1200, 600
 fps = 60
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     pygame.init()
     pygame.display.set_caption('arkanoid')
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
 
-def load_sprite(name, colorkey=None):  # не работает без предварительной инициализации pygame
-    # если файл не существует, то выходим
-    if not os.path.isfile(name):
-        print(f"Файл с изображением '{name}' не найден")
-        sys.exit()
-    image = pygame.image.load(name)
-    if colorkey is not None:
-        image = image.convert()
-        if colorkey == -1:
-            colorkey = image.get_at((0, 0))
-        image.set_colorkey(colorkey)
-    else:
-        image = image.convert_alpha()
-    return image
-
-
-allBrickSprites = pygame.sprite.Group()
-
-
-class Brick(pygame.sprite.Sprite):
-    image = load_sprite("sprites/brick_blue.png")
-
-    def __init__(self, x, y):
-        super().__init__(allBrickSprites)
-        self.image = Brick.image
-        self.rect = self.image.get_rect()
-        self.rect.x = x
-        self.rect.y = y
-
-    def return_brick(self):
-        return self.rect
-
-
-class BrickManager:
-    def __init__(self, left, top, kol_vo_w, kol_vo_h):
-        self.bricks = [Brick(1 + left * i, 1 + top * j)
-                       for i in range(kol_vo_w) for j in range(kol_vo_h)]
-
-    def delete_brick(self, number_brick_which_delete):
-        brick = self.bricks.pop(number_brick_which_delete)
-        allBrickSprites.remove(brick) 
-        return brick
-
-    def get_bricks_list(self):
-        return self.bricks
-
-    def detect_finish(self):
-        if self.bricks:
-            return False
-        else:
-            return True
-
-    def get_brick_quantity(self):
-        return len(self.bricks)
-
+from brick_loader import Brick, BrickManager, allBrickSprites, BrickMapLoader
 
 platformSprite = pygame.sprite.Group()
 
 
 class Platform(pygame.sprite.Sprite):
-    image = load_sprite("sprites/platform.png")
+    image = load_sprite('sprites/platform.png')
 
     def __init__(self, w, h, s):
         super().__init__(platformSprite)
@@ -101,7 +49,7 @@ ballSprite = pygame.sprite.Group()
 
 
 class Ball(pygame.sprite.Sprite):
-    anim_sprites = [load_sprite(f"sprites/ball_anim/ball_anim{_}.png") for _ in range(1, 10)]
+    anim_sprites = [load_sprite(f'sprites/ball_anim/ball_anim{_}.png') for _ in range(1, 10)]
 
     def __init__(self, r, s):
         super().__init__(ballSprite)
@@ -129,7 +77,6 @@ class Ball(pygame.sprite.Sprite):
 
     def collide_with_platform(self, rect):
         if self.rect.colliderect(rect):
-            print("ball colided with platform")
             self.is_animate = True
             return True
         return False
@@ -188,7 +135,7 @@ def terminate():
 
 
 def game_field_init():
-    """return BrickManager, Platform, Ball"""
+    '''return BrickManager, Platform, Ball'''
     global allBrickSprites, platformSprite, ballSprite
     if allBrickSprites:
         for _ in allBrickSprites:
@@ -199,7 +146,9 @@ def game_field_init():
     if ballSprite:
         for _ in ballSprite:
             ballSprite.remove(_)
-    return BrickManager(55, 30, 10, 2), Platform(330, 35, 15), Ball(20, 6)
+    # gamefield = BrickMapLoader.generate_default_gamefield(55, 30, 10, 2)
+    gamefield = BrickMapLoader(f'maps/map_{randint(1, 2)}.txt').get_brick_map()
+    return BrickManager(gamefield), Platform(330, 35, 15), Ball(20, 6)
 
 
 font = pygame.font.Font('fonts/Pentapixel.ttf', 33)
@@ -237,7 +186,7 @@ def start_screen():
 def finish_screen(score):
     global font
     start_fps = 1
-    intro_text = [f' Victory!{" " * 50}your score:{score}{" " * 22}Press any key to restart game']
+    intro_text = [f" Victory!{' ' * 50}your score:{score}{' ' * 22}Press any key to restart game"]
 
     fon = pygame.image.load('windows/finish_window_v2_version.png').convert()
     fon = pygame.transform.scale(fon, (WIDTH, HEIGHT))
@@ -266,7 +215,7 @@ def finish_screen(score):
 def game_over_screen():
     global font
     start_fps = 1
-    intro_text = [f'   Game Over!{" " * 76}Press any key to restart game']
+    intro_text = [f"   Game Over!{' ' * 76}Press any key to restart game"]
 
     fon = pygame.image.load('windows/finish_window_v3.png').convert()
     fon = pygame.transform.scale(fon, (WIDTH, HEIGHT))
@@ -298,6 +247,7 @@ if __name__ == '__main__':
     start_screen()
     running = True
     start_game = True
+    BrickMapLoader('maps/map_1.txt')
     game_field_init()
     bricks_quantity_w = 20
     bricks_quantity_h = 10
