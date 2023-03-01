@@ -1,0 +1,9 @@
+- - - - - - r r r r r r r r r - - - - - -
+- - - - - - r r r w w w w w r - - - - - -
+- - - - - - r r w r r r r w r - - - - - -
+- - - - - - r r r w r r r w r - - - - - -
+- - - - - - r r r r w w w w r - - - - - -
+- - - - - - r r r w r r r w r - - - - - -
+- - - - - - r r w r r r r w r - - - - - -
+- - - - - - r w r r r r r w r - - - - - -
+- - - - - - r r r r r r r r r - - - - - -
