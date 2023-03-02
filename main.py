@@ -153,7 +153,6 @@ def game_field_init():
     with open(cd_map, mode='rt') as map_file:
         brick_lines = map_file.readlines()
         bricks = [[brick for brick in brick_line.strip().split(' ')] for brick_line in brick_lines]
-        print(bricks)
         size = len(bricks) * 22
         for i, elem in enumerate(bricks):
             size -= elem.count('-')
